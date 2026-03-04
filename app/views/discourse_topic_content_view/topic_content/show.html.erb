@@ -1,22 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title><%= @post.topic.title %> - <%= SiteSetting.title %></title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <%= discourse_stylesheet_link_tag :application, theme_id: theme_id %>
-  <%= discourse_stylesheet_link_tag :desktop, theme_id: theme_id %>
-  <%= preload_script "start-discourse" %>
-  <%= csrf_meta_tags %>
-</head>
-<body class="topic-content-view">
-  <div class="topic-content-container">
-    <h1 class="topic-content-title"><%= @post.topic.title %></h1>
-    <div class="topic-content-body cooked">
-      <%= raw @post.cooked %>
-    </div>
+<div class="topic-content-container">
+  <h1 class="topic-content-title"><%= ERB::Util.html_escape(@topic.title) %></h1>
+  <div class="topic-content-body cooked">
+    <%= raw @post.cooked %>
   </div>
-  
-  <%= discourse_javascript_tags %>
-</body>
-</html>
+</div>
