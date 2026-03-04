@@ -1,6 +1,6 @@
 # name: discourse-topic-content-view
-# about: Display topic cooked content at /topic-content/:id
-# version: 0.2.0
+# about: Display topic cooked content at /topic-content/:id with full theme JS
+# version: 0.3.0
 # authors: @denvergeeks
 # url: https://github.com/denvergeeks/discourse-topic-content-view
 
@@ -23,44 +23,64 @@ after_initialize do
       title      = ERB::Util.html_escape(topic.title)
       site_title = ERB::Util.html_escape(SiteSetting.title)
       cooked     = post.cooked
-      sheets     = build_stylesheets
+      nonce      = SecureRandom.hex(16)
 
-      render html: build_html(title, site_title, cooked, sheets).html_safe
-    end
+      # Build stylesheet link tags the same way published pages do
+      css_tags = ""
+      begin
+        manager = Stylesheet::Manager.new(theme_id: theme_id)
 
-    private
+        # Color definitions (light scheme)
+        color_scheme_id = ColorScheme.find_by(name: 'Light')&.id || ColorScheme.first&.id
+        manager.stylesheet_details(:color_definitions, 'all').each do |s|
+          css_tags += "  <link href=\"#{s[:new_href]}\" media=\"all\" rel=\"stylesheet\">\n"
+        end rescue nil
 
-    def find_topic(id_or_slug)
-      if id_or_slug =~ /\A\d+\z/
-        Topic.find_by(id: id_or_slug.to_i)
-      else
-        Topic.find_by(slug: id_or_slug)
+        # Publish stylesheet (base styles)
+        manager.stylesheet_details(:publish, 'all').each do |s|
+          css_tags += "  <link href=\"#{s[:new_href]}\" media=\"all\" rel=\"stylesheet\">\n"
+        end rescue nil
+
+        # All common theme stylesheets
+        manager.stylesheet_details(:common_theme, 'all').each do |s|
+          css_tags += "  <link href=\"#{s[:new_href]}\" media=\"all\" rel=\"stylesheet\" data-theme-id=\"#{s[:theme_id]}\">\n"
+        end rescue nil
+
+        # Desktop theme stylesheets
+        manager.stylesheet_details(:desktop_theme, 'all').each do |s|
+          css_tags += "  <link href=\"#{s[:new_href]}\" media=\"all\" rel=\"stylesheet\" data-theme-id=\"#{s[:theme_id]}\">\n"
+        end rescue nil
+
+        # Plugin stylesheets
+        Discourse.find_plugin_css_assets(
+          include_disabled: false,
+          mobile_view: false,
+          desktop_view: true
+        ).each do |asset|
+          css_tags += "  <link href=\"/stylesheets/#{asset}.css\" media=\"all\" rel=\"stylesheet\">\n"
+        end rescue nil
+      rescue => e
+        Rails.logger.error "TopicContentView CSS error: #{e.message}"
       end
-    end
 
-    def build_stylesheets
-      tags = []
-      tid = theme_id
-      [:desktop, :mobile, :publish].each do |target|
-        begin
-          Stylesheet::Manager.new(theme_id: tid).stylesheet_details(target, 'all').each do |s|
-            tags << "<link href=\"#{s[:new_href]}\" media=\"all\" rel=\"stylesheet\">"
-          end
-        rescue
-        end
+      # Build JS script tags - use the publish entrypoint + theme JS
+      js_tags = ""
+      begin
+        # The publish entrypoint is what published pages use
+        js_tags += "  <script defer src=\"/assets/publish.js\" data-discourse-entrypoint=\"publish\" nonce=\"#{nonce}\"></script>\n"
+      rescue => e
+        Rails.logger.error "TopicContentView JS error: #{e.message}"
       end
-      tags.join("\n  ")
-    end
 
-    def build_html(title, site_title, cooked, sheets)
-      <<~HTML
+      html = <<~HTML
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="utf-8">
           <title>#{title} - #{site_title}</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-          #{sheets}
+          <meta name="generator" content="Discourse #{Discourse::VERSION::STRING}">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+        #{css_tags}
           <style>
             body {
               max-width: 900px;
@@ -103,9 +123,22 @@ after_initialize do
               #{cooked}
             </div>
           </div>
+        #{js_tags}
         </body>
         </html>
       HTML
+
+      render html: html.html_safe
+    end
+
+    private
+
+    def find_topic(id_or_slug)
+      if id_or_slug =~ /\A\d+\z/
+        Topic.find_by(id: id_or_slug.to_i)
+      else
+        Topic.find_by(slug: id_or_slug)
+      end
     end
   end
 
