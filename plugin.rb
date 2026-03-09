@@ -1,6 +1,6 @@
 # name: discourse-topic-content-view
 # about: Minimal view rendering only a topic's first-post cooked content
-# version: 0.9.0
+# version: 0.9.1
 # authors: @denvergeeks
 # url: https://github.com/denvergeeks/discourse-topic-content-view
 
@@ -15,22 +15,16 @@ after_initialize do
     layout 'topic_content'
 
     def show
-      @topic = find_topic(params[:id])
+      topic_id = params[:id] || params[:slug]
+      @topic_view = TopicView.new(topic_id, current_user)
+      @topic = @topic_view.topic
       raise Discourse::NotFound unless @topic
       guardian.ensure_can_see!(@topic)
-      @post = @topic.first_post
+      @post = @topic_view.posts.first
       raise Discourse::NotFound unless @post
       render 'discourse_topic_content_view/topic_content/show', formats: [:html]
-    end
-
-    private
-
-    def find_topic(id_or_slug)
-      if id_or_slug =~ /\A\d+\z/
-        Topic.find_by(id: id_or_slug.to_i)
-      else
-        Topic.find_by(slug: id_or_slug)
-      end
+    rescue Discourse::InvalidAccess
+      raise Discourse::NotFound
     end
   end
 
