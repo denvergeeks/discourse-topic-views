@@ -1,4 +1,25 @@
-<article class="topic-content-container">
-  <h1 class="topic-content-title"><%= ERB::Util.html_escape(@topic.title) %></h1>
-  <div class="cooked"><%= raw @post.cooked %></div>
+<article class="topic-content-view__topic">
+  <header class="topic-content-view__header">
+    <h1 class="topic-content-view__title"><%= @topic.title %></h1>
+
+    <div class="topic-content-view__meta">
+      <span class="topic-content-view__category">
+        <%= @topic.category&.name %>
+      </span>
+
+      <% if @topic.tags&.any? %>
+        <span class="topic-content-view__tags">
+          <% @topic.tags.each do |tag| %>
+            <span class="topic-content-view__tag"><%= tag.name %></span>
+          <% end %>
+        </span>
+      <% end %>
+    </div>
+  </header>
+
+  <section class="topic-content-view__body">
+    <div class="cooked">
+      <%= raw @post.cooked %>
+    </div>
+  </section>
 </article>
