@@ -9,6 +9,9 @@ enabled_site_setting :topic_content_view_enabled
 register_asset "stylesheets/topic-content-view.scss", :desktop
 
 after_initialize do
+  # JSON API only — called by the Ember route model() hook as /t/:id/content.json
+  # HTML requests to /t/:slug/:id/content fall through to Discourse's catch-all,
+  # which serves the Ember SPA shell; Ember then boots and handles routing.
   class ::TopicContentViewController < ::ApplicationController
     requires_plugin 'discourse-topic-content-view'
     skip_before_action :verify_authenticity_token
@@ -41,11 +44,11 @@ after_initialize do
   end
 
   Discourse::Application.routes.prepend do
+    # Only register JSON format routes — these are called by the Ember route's ajax()
+    # Browser direct GETs (no .json) fall through to Discourse's catch-all and boot Ember
     get '/t/:slug/:id/content' => 'topic_content_view#show',
-        constraints: { id: /\d+/, slug: /[^\/]+/ },
-        defaults: { format: :json }
+        constraints: { id: /\d+/, slug: /[^\/]+/, format: /json/ }
     get '/t/:id/content' => 'topic_content_view#show',
-        constraints: { id: /[^.]+/ },
-        defaults: { format: :json }
+        constraints: { id: /[^.\/]+/, format: /json/ }
   end
 end
