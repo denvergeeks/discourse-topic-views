@@ -47,10 +47,14 @@ after_initialize do
   end
 
   Discourse::Application.routes.prepend do
-    # JSON API — only responds to .json requests (Ember ajax adds the suffix)
+    # JSON API endpoint — Ember ajax calls /tc/:id.json
     get '/tc/:id' => 'topic_content_view#show',
-        constraints: { id: /\d+/, format: /json/ },
-        format: false,
-        defaults: { format: :json }
+        constraints: { id: /\d+/ },
+        format: 'json'
+
+    # HTML — delegate all /tc/* browser requests to Discourse's root
+    # controller so the SPA shell (with all theme/plugin assets) is served
+    get '/tc/*path' => 'application#index',
+        format: false
   end
 end
