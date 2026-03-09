@@ -5,6 +5,7 @@
     <title><%= @topic&.title || SiteSetting.title %></title>
     <%= discourse_stylesheet_link_tag :desktop %>
     <%= discourse_stylesheet_link_tag :mobile %>
+    <%= discourse_javascript_include_tag :discourse %>
   </head>
   <body class="topic-content-view">
     <main class="topic-content-view__container">
