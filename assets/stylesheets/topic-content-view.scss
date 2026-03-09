@@ -1,21 +1,46 @@
-// Scoped only to the topic-content-view layout.
-// Discourse core's desktop.css already styles .cooked content (img, blockquote,
-// pre, code, tables, etc.) — no need to redefine those here.
-
 body.topic-content-view {
-  background: var(--secondary);
+  background: var(--secondary, #f5f5f5);
+  margin: 0;
+  padding: 0;
 
-  .topic-content-container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 2em;
+  .topic-content-view__container {
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background: var(--primary-very-low, #ffffff);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
   }
 
-  .topic-content-title {
-    font-size: 1.75em;
-    margin-bottom: 0.75em;
-    color: var(--primary);
-    border-bottom: 1px solid var(--primary-low);
-    padding-bottom: 0.5em;
+  .topic-content-view__title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.8rem;
+    line-height: 1.25;
+  }
+
+  .topic-content-view__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--secondary-medium);
+    margin-bottom: 1.25rem;
+  }
+
+  .topic-content-view__category {
+    font-weight: 600;
+  }
+
+  .topic-content-view__tag {
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: var(--primary-very-low);
+    color: var(--primary-high);
+    font-size: 0.78rem;
+  }
+
+  .topic-content-view__body {
+    font-size: 1rem;
+    line-height: 1.6;
   }
 }
