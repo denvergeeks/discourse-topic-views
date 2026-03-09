@@ -19,7 +19,7 @@
 
   <section class="topic-content-view__body">
     <div class="cooked">
-      <%= raw @post.cooked %>
+      <%= @post.cooked.html_safe %>
     </div>
   </section>
 </article>
