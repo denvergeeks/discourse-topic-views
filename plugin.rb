@@ -6,7 +6,7 @@
 
 enabled_site_setting :topic_content_view_enabled
 
-register_asset "assets/stylesheets/topic-content-view.scss", :desktop
+register_asset "stylesheets/topic-content-view.scss", :desktop
 
 after_initialize do
   ApplicationController.prepend_view_path(File.join(File.dirname(__FILE__), "app/views"))
