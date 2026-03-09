@@ -112,9 +112,8 @@ after_initialize do
     skip_before_action :check_xhr, :preload_json, :verify_authenticity_token
     layout 'topic_content'
 
-    respond_to :html
-
     def show
+      request.format = :html
       @topic = find_topic(params[:id])
       raise Discourse::NotFound unless @topic
       guardian.ensure_can_see!(@topic)
