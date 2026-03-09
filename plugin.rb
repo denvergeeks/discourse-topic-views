@@ -22,7 +22,7 @@ after_initialize do
       @topic = @topic_view.topic
       raise Discourse::NotFound unless @topic
       guardian.ensure_can_see!(@topic)
-      @post = @topic_view.posts.first
+      @post = @topic.ordered_posts.first
       raise Discourse::NotFound unless @post
       render 'discourse_topic_content_view/topic_content/show', formats: [:html]
     rescue Discourse::InvalidAccess
