@@ -1,61 +1,13 @@
 # name: discourse-topic-content-view
-# about: Renders topic title + cooked content inside Discourse SPA (all theme/plugin CSS+JS active)
+# about: Renders topic title + cooked content only, triggered via ?tc=1 query param
 # version: 1.0.0
 # authors: @denvergeeks
 # url: https://github.com/denvergeeks/discourse-topic-content-view
 
 enabled_site_setting :topic_content_view_enabled
 
+# SCSS adds body.tc-mode which hides all chrome; JS initializer sets it when ?tc=1 present
 register_asset "stylesheets/topic-content-view.scss", :desktop
 
-after_initialize do
-  # JSON API — called by the Ember route's model() hook via ajax("/t/:id/tc.json")
-  class ::TopicContentViewController < ::ApplicationController
-    requires_plugin 'discourse-topic-content-view'
-    skip_before_action :verify_authenticity_token
-
-    def show
-      topic_id = params[:id]
-      begin
-        topic_view = TopicView.new(topic_id, current_user)
-      rescue Discourse::NotFound, Discourse::InvalidAccess
-        return render json: { error: 'not_found' }, status: 404
-      end
-
-      topic = topic_view.topic
-      return render json: { error: 'not_found' }, status: 404 unless topic
-
-      begin
-        guardian.ensure_can_see!(topic)
-      rescue Discourse::InvalidAccess
-        return render json: { error: 'not_found' }, status: 404
-      end
-
-      post = topic.ordered_posts.first
-      return render json: { error: 'not_found' }, status: 404 unless post
-
-      render json: {
-        id:            topic.id,
-        title:         topic.title,
-        slug:          topic.slug,
-        category_id:   topic.category_id,
-        category_name: topic.category&.name,
-        tags:          topic.tags.map(&:name),
-        cooked:        post.cooked
-      }
-    end
-  end
-
-  Discourse::Application.routes.prepend do
-    # JSON API — Ember ajax calls /t/:id/tc.json
-    # /t/ is already proxied by Nginx — no server config changes needed
-    get '/t/:id/tc' => 'topic_content_view#show',
-        constraints: { id: /\d+/ },
-        format: 'json'
-
-    # SPA shell — browser navigates to /t/:slug/:id/tc
-    # list#index renders the Discourse SPA HTML; Ember then handles the URL client-side
-    get '/t/:slug/:id/tc' => 'list#index',
-        constraints: { id: /\d+/ }
-  end
-end
+# No custom Rails routes needed — we piggyback on existing /t/:slug/:id Discourse routing.
+# The ?tc=1 query param is detected client-side by the initializer.
