@@ -1,4 +1,4 @@
 plugins:
-  topic_content_view_enabled:
+  topic_views_enabled:
     default: true
     client: true
